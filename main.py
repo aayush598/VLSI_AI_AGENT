@@ -19,19 +19,22 @@ c = conn.cursor()
 c.execute("""
     CREATE TABLE IF NOT EXISTS folder_structures (
         project_name TEXT PRIMARY KEY,
+        user_prompt TEXT,
         folder_structure TEXT
     )
 """)
 conn.commit()
 
-def save_or_update_structure(project_name, folder_structure):
+def save_or_update_structure(project_name, user_input, folder_structure):
     """Saves a new project folder structure or updates an existing one."""
     c.execute("""
-        INSERT INTO folder_structures (project_name, folder_structure) 
-        VALUES (?, ?) 
+        INSERT INTO folder_structures (project_name, user_prompt, folder_structure) 
+        VALUES (?, ?, ?) 
         ON CONFLICT(project_name) 
-        DO UPDATE SET folder_structure = excluded.folder_structure
-    """, (project_name, folder_structure))
+        DO UPDATE SET 
+            user_prompt = excluded.user_prompt,
+            folder_structure = excluded.folder_structure
+    """, (project_name, user_input,  folder_structure))
     conn.commit()
 
 def get_structure_by_name(project_name):
@@ -91,7 +94,7 @@ def generate_rtl_structure(user_input):
     clean_response = post_process_response(response.text)
     validated_response = enforce_json_structure(clean_response)
     project_name = json.loads(validated_response).get("project_name", "Unnamed Project")
-    save_or_update_structure(project_name, validated_response)
+    save_or_update_structure(project_name, user_input, validated_response)
     return validated_response
 
 
@@ -154,7 +157,7 @@ def modify_structure(existing_structure, user_modification):
     clean_response = post_process_response(response.text)
     validated_response = enforce_json_structure(clean_response)
     project_name = json.loads(validated_response).get("project_name", "Unnamed Project")
-    save_or_update_structure(project_name, validated_response)
+    save_or_update_structure(project_name, user_input, validated_response)
     return validated_response
 
 
