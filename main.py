@@ -90,35 +90,55 @@ def generate_rtl_structure(user_input):
 
 def modify_structure(existing_structure, user_modification):
     prompt = f'''
-    Modify the following RTL project folder structure based on this user request: "{user_modification}".
-    
-    **Existing JSON Structure:**
-    {existing_structure}
+        Modify the following RTL project folder structure based on this user request: "{user_modification}".
 
-    **Updated JSON must strictly follow this structure:**
-    {{
-        "project_name": "ProjectName",
-        "directories": [
-            {{
-                "name": "src",
-                "files": ["file1.v", "file2.sv"],
-                "subdirectories": []
-            }},
-            {{
-                "name": "tb",
-                "files": ["testbench1.v", "testbench2.sv"],
-                "subdirectories": []
+        **Existing JSON Structure:**  
+        ```json
+        {existing_structure}
+        ```
+
+        **Updated JSON must strictly follow this structure:**  
+        ```json
+        {{
+            "project_name": "ProjectName",
+            "directories": [
+                {{
+                    "name": "src",
+                    "files": ["file1.v", "file2.sv"],
+                    "subdirectories": []
+                }},
+                {{
+                    "name": "tb",
+                    "files": ["testbench1.v", "testbench2.sv"],
+                    "subdirectories": []
+                }}
+            ],
+            "metadata": {{
+                "generated_by": "Gemini",
+                "version": "1.0",
+                "timestamp": "YYYY-MM-DD HH:MM:SS"
             }}
-        ],
-        "metadata": {{
-            "generated_by": "Gemini",
-            "version": "1.0",
-            "timestamp": "YYYY-MM-DD HH:MM:SS"
         }}
-    }}
+        ```
 
-    - **Do NOT add extra fields or explanations.**  
-    - **Return ONLY valid JSON.**
+        **Key Constraints:**  
+        - `"project_name"`: A string representing the name of the RTL project.  
+        - `"directories"`: A list of dictionaries, each with:
+            - `"name"`: The directory name.
+            - `"files"`: A list of RTL-related files (e.g., `.v`, `.sv`).
+            - `"subdirectories"`: A list of nested directories (can be empty but must be present).  
+        - `"metadata"`: A dictionary containing:
+            - `"generated_by"`: Always `"Gemini"`.
+            - `"version"`: Always `"1.0"`.
+            - `"timestamp"`: The generation timestamp in `"YYYY-MM-DD HH:MM:SS"` format.  
+
+        **Rules:**  
+        1. The response **must strictly contain only the above keys and structure**. No additional keys, descriptions, or explanations.  
+        2. Ensure that `"directories"` always has at least `"src"` and `"tb"` directories.  
+        3. The `"metadata"` section must always be present.  
+        4. **Return only valid JSON output**—no markdown, explanations, or additional formatting.  
+
+        Provide the JSON output following these constraints. Do not include any preamble, explanations, or markdown formatting.
     '''
     
     response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
@@ -126,6 +146,7 @@ def modify_structure(existing_structure, user_modification):
     validated_response = enforce_json_structure(clean_response)
     save_to_db("Modification: " + user_modification, validated_response)
     return validated_response
+
 
 def post_process_response(response_text):
     """ Cleans AI response to extract pure JSON. """
