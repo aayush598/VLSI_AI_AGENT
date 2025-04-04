@@ -3,7 +3,7 @@ from utils.folder_structure_generation import generate_rtl_structure, modify_str
 from utils.folder_setup import create_folders, get_all_project_names, get_project_structure
 from utils.code_generator import generate_code
 from utils.linting import run_linting
-from utils.synthesis import run_synthesis, get_project_list,display_images
+from utils.synthesis import run_synthesis, get_project_list,display_results
 
 # Streamlit App Configuration
 st.set_page_config(page_title="RTL Project Manager", layout="wide")
@@ -93,17 +93,18 @@ elif choice == "Linting":
             except Exception as e:
                 st.error(str(e))
 
-
 elif choice == "Synthesis":
     st.title("Run Synthesis on RTL Code")
     projects = get_project_list()
     project_name = st.selectbox("Select Project", projects)
     project_path = st.text_input("Enter project directory:")
+
     if st.button("Run Synthesis"):
         try:
-            synthesis_results = run_synthesis(project_path, project_name)
-            st.text_area("Synthesis Output:", synthesis_results, height=300)
+            success_files, error_logs = run_synthesis(project_path, project_name)
+
             st.success("Synthesis completed.")
-            display_images(synthesis_results)  # Display synthesized images
+
+            display_results(success_files, error_logs)  # Show results
         except Exception as e:
             st.error(str(e))
